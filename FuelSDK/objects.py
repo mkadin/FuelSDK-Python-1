@@ -142,7 +142,6 @@ class ET_TriggeredSend(ET_CUDSupport):
     subscribers = None
     attributes = None
     createOptions = None
-    #cOptionsparam = None
     def __init__(self):
         super(ET_TriggeredSend, self).__init__()
         self.obj_type = 'TriggeredSendDefinition'
@@ -156,8 +155,6 @@ class ET_TriggeredSend(ET_CUDSupport):
 class ET_CreateOptions(ET_CUDSupport):
     sendResponseTo = None
     cOptions = None
-    requestType = None
-    queuePriority = None
 
     def __init__(self, requestType="Synchronous", queuePriority=None):
         super(ET_CreateOptions, self).__init__()

@@ -17,7 +17,6 @@ class ET_Constructor(object):
     request_id = None
     
     def __init__(self, response = None, rest = False):
-        # type: (object, object) -> object
         
         if response is not None:    #if a response was returned from the web service call
             if rest:    # result is from a REST web service call...

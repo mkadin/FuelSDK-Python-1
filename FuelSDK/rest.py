@@ -17,6 +17,7 @@ class ET_Constructor(object):
     request_id = None
     
     def __init__(self, response = None, rest = False):
+        # type: (object, object) -> object
         
         if response is not None:    #if a response was returned from the web service call
             if rest:    # result is from a REST web service call...
@@ -213,10 +214,13 @@ class ET_Get(ET_Constructor):
 ##
 ########
 class ET_Post(ET_Constructor):
-    def __init__(self, auth_stub, obj_type, props = None):
+    def __init__(self, auth_stub, obj_type, tcs, props=None, createOp=None):
         auth_stub.refresh_token()
+        if createOp is not None:
+         response = auth_stub.soap_client.service.Create(self.parse_props_into_ws_object(auth_stub, createOp.obj_type, createOp.cOptions), self.parse_props_into_ws_object(auth_stub, obj_type, tcs))
+        else:
+         response = auth_stub.soap_client.service.Create(None, self.parse_props_into_ws_object(auth_stub, obj_type, tcs))
 
-        response = auth_stub.soap_client.service.Create(None, self.parse_props_into_ws_object(auth_stub, obj_type, props))
         if(response is not None):
             super(ET_Post, self).__init__(response)
 
@@ -226,10 +230,13 @@ class ET_Post(ET_Constructor):
 ##
 ########
 class ET_Patch(ET_Constructor):
-    def __init__(self, auth_stub, obj_type, props = None):
+    def __init__(self, auth_stub, obj_type, tcs, props = None, updateOp = None):
         auth_stub.refresh_token()
-              
-        response = auth_stub.soap_client.service.Update(None, self.parse_props_into_ws_object(auth_stub, obj_type, props))
+
+        if updateOp is not None:
+         response = auth_stub.soap_client.service.Update(self.parse_props_into_ws_object(auth_stub, updateOp.obj_type, updateOp.uOptions), self.parse_props_into_ws_object(auth_stub, obj_type, tcs))
+        else:
+         response = auth_stub.soap_client.service.Update(None, self.parse_props_into_ws_object(auth_stub, obj_type, tcs))
 
         if(response is not None):
             super(ET_Patch, self).__init__(response)
@@ -390,22 +397,24 @@ class ET_DeleteRest(ET_Constructor):
 ##
 ########
 class ET_CUDSupport(ET_GetSupport):
-    
+    createOptions = None
+    updateOptions = None
     def __init__(self):
         super(ET_CUDSupport, self).__init__()
         
     def post(self):
+        cOptions = self.createOptions
         if self.extProps is not None:
             for k, v in self.extProps.iteritems():
                 self.props[k.capitalize] = v
-        
-        obj = ET_Post(self.auth_stub, self.obj_type, self.props)
+        obj = ET_Post(self.auth_stub, self.obj_type, self.props, None, cOptions)
         if obj is not None:
             self.last_request_id = obj.request_id
         return obj
     
     def patch(self):
-        obj = ET_Patch(self.auth_stub, self.obj_type, self.props)
+        uOptions = self.updateOptions
+        obj = ET_Patch(self.auth_stub, self.obj_type, self.props, None, uOptions)
         if obj is not None:
             self.last_request_id = obj.request_id
         return obj

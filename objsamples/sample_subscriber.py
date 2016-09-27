@@ -1,4 +1,5 @@
 import ET_Client
+from FuelSDK.objects import ET_CreateOptions, ET_UpdateOptions, ET_Subscriber
 
 try:
     debug = False
@@ -8,6 +9,8 @@ try:
     #       SubscriberKey will need to be included in the props if that feature is enabled
     
     SubscriberTestEmail = "PythonSDKExample@bh.exacttarget.com"
+    RequestType = "Asynchronous"
+    QueuePriority = "High"/ "Medium"/ "Low"
 
     # Create Subscriber 
     print '>>> Create Subscriber'
@@ -115,6 +118,39 @@ try:
         print 'RequestID: ' + str(getResponse.request_id)
         print 'Results Length: ' + str(len(getResponse.results))
     '''
+
+    """
+    Asynchronous Soap request to perform Subscriber POST
+    """
+    ######################################################
+
+    # Explicitly passing the parameter, RequestType and QueuePriority
+    createOptions = ET_CreateOptions(RequestType, QueuePriority)
+    createOptions.auth_stub = stubObj
+    subscriber = ET_Subscriber()
+    subscriber.auth_stub = stubObj
+    subscriber.props = {"EmailAddress": "xyz@exacttarget.com", "SubscriberKey": "exacrtarget001"}
+    subscriber.props['Attributes'] = [{'Name': 'First Name', 'Value': 'John'}]
+    subscriber.createOptions = createOptions
+    results = subscriber.post()
+    print results.results
+
+    """
+    Asynchronous Soap request to perform Subscirber PATCH
+    """
+    #######################################################
+
+    # Explicitly passing the parameter, RequestType and QueuePriority
+    updateOptions = ET_UpdateOptions(RequestType, QueuePriority)
+    updateOptions.auth_stub = stubObj
+    subscriber = ET_Subscriber()
+    subscriber.auth_stub = stubObj
+    #Subscriber key is must to perform Update Operation
+    subscriber.props = {"Status": "Active", "EmailAddress": "xyz@exacttarget.com", "SubscriberKey": "exacrtarget001"}
+    subscriber.updateOptions = updateOptions
+    results = subscriber.patch()
+    print results.results
+
 
 except Exception as e:
     print 'Caught exception: ' + str(e.message)

@@ -1,9 +1,11 @@
 import ET_Client
-
+from FuelSDK.objects import ET_CreateOptions, ET_UpdateOptions, ET_DataExtension_Row
 try:
     debug = False
     stubObj = ET_Client.ET_Client(False, debug)
 
+    RequestType = "Asynchronous"
+    QueuePriority = "High" / "Medium" / "Low"
 
     # Get all of the DataExtensions in an Account
     print '>>> Get all of the DataExtensions in an Account'
@@ -197,6 +199,36 @@ try:
         print 'MoreResults: ' + str(getResponse.more_results)
         print 'RequestID: ' + str(getResponse.request_id)
         print 'Results Length: ' + str(len(getResponse.results))
+
+    # Asynchronous Soap request to perform DataExtensionRow POST
+    #############################################################
+
+    dataExtensionRow = ET_DataExtension_Row()
+    # Explicitly passing the parameter, RequestType and QueuePriority
+    createOptions = ET_CreateOptions(RequestType, QueuePriority)
+    createOptions.auth_stub = stubObj
+    dataExtensionRow.auth_stub = stubObj
+    dataExtensionRow.CustomerKey = "CustomerKey"
+    dataExtensionRow.props = {"Field_1" : "Value_1", "Field_2" : "Value_2", "Field_3" : "Value_3"}
+    dataExtensionRow.createOptions = createOptions
+    results = dataExtensionRow.post()
+    print results.results
+
+    # Asynchronous Soap request to perform DataExtensionRow PATCH
+    #############################################################
+
+    dataExtensionRow = ET_DataExtension_Row()
+    # Explicitly passing the parameter, RequestType and QueuePriority
+    updateOptions = ET_UpdateOptions(RequestType, QueuePriority)
+    updateOptions.auth_stub = stubObj
+    dataExtensionRow.auth_stub = stubObj
+    dataExtensionRow.CustomerKey = "CustomerKey"
+    #To Update a row first property must be a primary key, primary key name and value must be same as in DataExtension
+    dataExtensionRow.props = {"PrimaryKeyName": "key_Value", "Field_1": "Updated_Value_1", "Field_2": "Updated_Value_2"}
+    dataExtensionRow.updateOptions = updateOptions
+    results = dataExtensionRow.patch()
+    print results.results
+
 
 except Exception as e:
     print 'Caught exception: ' + str(e.message)

@@ -87,6 +87,7 @@ class ET_ClickEvent(ET_GetSupport):
 ##  wrap an Exact Target List and List Subscriber
 ##
 ########
+
 class ET_Group(ET_CUDSupport):
     def __init__(self):
         super(ET_Group, self).__init__()
@@ -139,16 +140,40 @@ class ET_Email(ET_CUDSupport):
 
 class ET_TriggeredSend(ET_CUDSupport):
     subscribers = None
-    attributes  = None
+    attributes = None
+    createOptions = None
+    #cOptionsparam = None
     def __init__(self):
         super(ET_TriggeredSend, self).__init__()
         self.obj_type = 'TriggeredSendDefinition'
 
     def send(self):
-        tscall = {"TriggeredSendDefinition" : self.props, "Subscribers" : self.subscribers, "Attributes": self.attributes }
-        self.obj = ET_Post(self.auth_stub, "TriggeredSend", tscall)
+        tscall = {"TriggeredSendDefinition": self.props, "Subscribers": self.subscribers, "Attributes": self.attributes}
+        cObj = self.createOptions
+        self.obj = ET_Post(self.auth_stub, "TriggeredSend", tscall, None, cObj)
         return self.obj
 
+class ET_CreateOptions(ET_CUDSupport):
+    sendResponseTo = None
+    cOptions = None
+    requestType = None
+    queuePriority = None
+
+    def __init__(self, requestType="Synchronous", queuePriority=None):
+        super(ET_CreateOptions, self).__init__()
+        self.sendResponseTo = {"ResponseType": "HTTPPost", "ResponseAddress": "http://error.domain.com/service.aspx", "RespondWhen": "OnError", "IncludeResults": "true", "IncludeObjects": "true"}
+        self.obj_type = 'CreateOptions'
+        self.cOptions = {"SendResponseTo": self.sendResponseTo, "RequestType": requestType, "QueuePriority": queuePriority}
+
+class ET_UpdateOptions(ET_CUDSupport):
+    sendResponseTo = None
+    uOptions = None
+
+    def __init__(self, requestType="Synchronous", queuePriority=None):
+        super(ET_UpdateOptions,self).__init__()
+        self.sendResponseTo = {"ResponseType": "HTTPPost", "ResponseAddress": "http://error.domain.com/service.aspx","RespondWhen": "OnError", "IncludeResults": "true", "IncludeObjects": "true"}
+        self.obj_type = 'UpdateOptions'
+        self.uOptions = {"SendResponseTo": self.sendResponseTo, "RequestType": requestType, "QueuePriority": queuePriority}
 
 class ET_Subscriber(ET_CUDSupport):
     def __init__(self):
@@ -270,6 +295,7 @@ class ET_DataExtension_Row(ET_CUDSupport):
         return obj
         
     def post(self):
+        cDataECtensionRow = self.createOptions
         self.getCustomerKey()
         originalProps = self.props
         
@@ -301,11 +327,12 @@ class ET_DataExtension_Row(ET_CUDSupport):
             currentProp['Properties'] = {}
             currentProp['Properties']['Property'] = currentFields   
 
-        obj = ET_Post(self.auth_stub, self.obj_type, currentProp)   
+        obj = ET_Post(self.auth_stub, self.obj_type, currentProp, None, cDataECtensionRow)
         self.props = originalProps
         return obj
         
-    def patch(self): 
+    def patch(self):
+        upExProp = self.updateOptions
         self.getCustomerKey()
 
         if type(self.props) is list:
@@ -335,7 +362,7 @@ class ET_DataExtension_Row(ET_CUDSupport):
             currentProp['Properties'] = {}
             currentProp['Properties']['Property'] = currentFields
             
-        obj = ET_Patch(self.auth_stub, self.obj_type, currentProp)
+        obj = ET_Patch(self.auth_stub, self.obj_type, currentProp, None, upExProp)
         return obj
     
     def delete(self): 

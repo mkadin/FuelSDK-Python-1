@@ -88,7 +88,7 @@ class ET_Client(object):
         elif 'FUELSDK_AUTH_URL' in os.environ:
             self.auth_url = os.environ['FUELSDK_AUTH_URL']
         else:
-            self.auth_url = 'https://auth.exacttargetapis.com/v1/requestToken?legacy=1'
+            self.auth_url = 'https://auth.exacttargetapis.com/v1/requestToken'
 
         if params is not None and "wsdl_file_local_loc" in params:
             wsdl_file_local_location = params["wsdl_file_local_loc"]
@@ -154,22 +154,12 @@ class ET_Client(object):
         if self.endpoint is None: 
             self.endpoint = self.determineStack()
         
-        self.authObj = {'oAuth' : {'oAuthToken' : self.internalAuthToken}}          
-        self.authObj['attributes'] = { 'oAuth' : { 'xmlns' : 'http://exacttarget.com' }}                        
-
         self.soap_client = suds.client.Client(self.wsdl_file_url, faults=False, cachingpolicy=1)
         self.soap_client.set_options(location=self.endpoint)
 
-        element_oAuth = Element('oAuth', ns=('etns', 'http://exacttarget.com'))
-        element_oAuthToken = Element('oAuthToken').setText(self.internalAuthToken)
-        element_oAuth.append(element_oAuthToken)
-        self.soap_client.set_options(soapheaders=(element_oAuth))               
-        
-        security = suds.wsse.Security()
-        token = suds.wsse.UsernameToken('*', '*')
-        security.tokens.append(token)
-        self.soap_client.set_options(wsse=security)             
-        
+        element_oAuth = Element('fueloauth', ns=('etns', 'http://exacttarget.com'))
+        element_oAuth =  Element('fueloauth').setText(self.authToken)
+        self.soap_client.set_options(soapheaders=(element_oAuth))
 
     def refresh_token(self, force_refresh = False):
         """
@@ -181,9 +171,8 @@ class ET_Client(object):
             if (self.authToken is None):
                 payload = {'clientId' : self.client_id, 'clientSecret' : self.client_secret, 'accessType': 'offline'}
             else:
-                payload = {'clientId' : self.client_id, 'clientSecret' : self.client_secret, 'refreshToken' : self.refreshKey, 'accessType': 'offline'}
-            if self.refreshKey:
-                payload['refreshToken'] = self.refreshKey
+                payload = {'clientId' : self.client_id, 'clientSecret' : self.client_secret, 'refreshToken' : self.refreshKey, 'accessType' : 'offline'}
+
 
             r = requests.post(self.auth_url, data=json.dumps(payload), headers=headers)
             tokenResponse = r.json()
@@ -193,7 +182,7 @@ class ET_Client(object):
             
             self.authToken = tokenResponse['accessToken']
             self.authTokenExpiration = time.time() + tokenResponse['expiresIn']
-            self.internalAuthToken = tokenResponse['legacyToken']
+#            self.internalAuthToken = tokenResponse['Token']
             if 'refreshToken' in tokenResponse:
                 self.refreshKey = tokenResponse['refreshToken']
         

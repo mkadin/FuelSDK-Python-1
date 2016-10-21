@@ -250,3 +250,20 @@ class ET_Client(object):
         postResponse = newDEs.post()        
         
         return postResponse
+
+
+    def restUpsertToDEBatch(self, dataExtKey, payload):
+        """
+        use REST API to send data to ExactTarget, faster than previous way
+
+        :param string dataExtKey: external_key for the data extension
+        :param list payload: a list of dicts, each dicts contains a keys and fields for the data
+        """
+        self.refresh_token()
+        url = ("https://www.exacttargetapis.com/hub/v1/dataevents/key:%s/rowset") % dataExtKey
+        headers = {'Content-Type': 'application/json; charset=UTF-8', 'Authorization': 'Bearer ' + self.authToken}
+        #requests may handle endcoding already, if so delete charset=UTF..
+        r = requests.post(url, headers=headers, data=json.dumps(payload))
+        r.raise_for_status()
+
+        return r

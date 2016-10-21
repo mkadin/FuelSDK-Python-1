@@ -31,6 +31,7 @@ class ET_Client(object):
     authObj = None
     soap_client = None
     auth_url = None
+    request_timeout = 20  # seconds to use for timeout with the requests library.
         
     ## get_server_wsdl - if True and a newer WSDL is on the server than the local filesystem retrieve it
     def __init__(self, get_server_wsdl = False, debug = False, params = None):
@@ -90,6 +91,13 @@ class ET_Client(object):
         else:
             self.auth_url = 'https://auth.exacttargetapis.com/v1/requestToken'
 
+        if params is not None and "request_timeout" in params:
+            self.request_timeout = params["request_timeout"]
+        elif config.has_option("Web Services", "request_timeout"):
+            self.request_timeout = config.get("Web Services", "request_timeout")
+        elif "FUELSDK_REQUEST_TIMEOUT" in os.environ:
+            self.request_timeout = os.environ["FUELSDK_REQUEST_TIMEOUT"]
+
         if params is not None and "wsdl_file_local_loc" in params:
             wsdl_file_local_location = params["wsdl_file_local_loc"]
         elif config.has_option("Web Services", "wsdl_file_local_loc"):
@@ -131,7 +139,7 @@ class ET_Client(object):
         if not os.path.exists(file_location) or os.path.getsize(file_location) == 0:   #if there is no local copy or local copy is empty then go get it...
             self.retrieve_server_wsdl(wsdl_url, file_location)
         elif get_server_wsdl:
-            r = requests.head(wsdl_url)
+            r = requests.head(wsdl_url, timeout=self.request_timeout)
             if r is not None and 'last-modified' in r.headers:
                 server_wsdl_updated = time.strptime(r.headers['last-modified'], '%a, %d %b %Y %H:%M:%S %Z')
                 file_wsdl_updated = time.gmtime(os.path.getmtime(file_location))
@@ -145,7 +153,7 @@ class ET_Client(object):
         """
         get the WSDL from the server and save it locally
         """
-        r = requests.get(wsdl_url)
+        r = requests.get(wsdl_url, timeout=self.request_timeout)
         f = open(file_location, 'w')
         f.write(r.text)
         
@@ -174,7 +182,7 @@ class ET_Client(object):
                 payload = {'clientId' : self.client_id, 'clientSecret' : self.client_secret, 'refreshToken' : self.refreshKey, 'accessType' : 'offline'}
 
 
-            r = requests.post(self.auth_url, data=json.dumps(payload), headers=headers)
+            r = requests.post(self.auth_url, data=json.dumps(payload), headers=headers, timeout=self.request_timeout)
             tokenResponse = r.json()
             
             if 'accessToken' not in tokenResponse:
@@ -194,7 +202,7 @@ class ET_Client(object):
         find the correct url that data request web calls should go against for the token we have.
         """
         try:
-            r = requests.get('https://www.exacttargetapis.com/platform/v1/endpoints/soap?access_token=' + self.authToken, {'user-agent' : 'FuelSDK-Python'})
+            r = requests.get('https://www.exacttargetapis.com/platform/v1/endpoints/soap?access_token=' + self.authToken, {'user-agent' : 'FuelSDK-Python'}, timeout=self.request_timeout)
             contextResponse = r.json()
             if('url' in contextResponse):
                 return str(contextResponse['url'])

@@ -202,7 +202,7 @@ class ET_Client(object):
         find the correct url that data request web calls should go against for the token we have.
         """
         try:
-            r = requests.get('https://www.exacttargetapis.com/platform/v1/endpoints/soap?access_token=' + self.authToken, {'user-agent' : 'FuelSDK-Python'}, timeout=self.request_timeout)
+            r = requests.get('https://www.exacttargetapis.com/platform/v1/endpoints/soap?access_token=' + self.authToken, headers={'user-agent' : 'FuelSDK-Python'}, timeout=self.request_timeout)
             contextResponse = r.json()
             if('url' in contextResponse):
                 return str(contextResponse['url'])
